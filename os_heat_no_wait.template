@@ -1,0 +1,111 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "All-In-One server",
+  "Parameters" : {
+    "TestServerEIP" : {
+      "Description" : "EIP to associate Testserver",
+      "Type" : "String",
+      "Default" : "10.0.2.102"
+    },
+    "CidrIp" : {
+      "Description" : "From ip address for setting SG",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0"
+    },
+    "GitRepo" : {
+      "Description" : "Git Repository URL",
+      "Type" : "String",
+      "Default" : "https://github.com/iijima-toru-asdf/hogehoge"
+    },
+    "GitTag" : {
+      "Description" : "Git Tag",
+      "Type" : "String",
+      "Default" : "master"
+    },
+    "Cookbook" : {
+      "Description" : "Cookbook name",
+      "Type" : "String",
+      "Default" : "osheat"
+    },
+    "Runlist" : {
+      "Description" : "Runlist name",
+      "Type" : "String",
+      "Default" : "all"
+    },
+    "KeyName" : {
+      "Description" : "KeyPair to enable SSH access",
+      "Type" : "String",
+      "Default" : "first_key"
+    },
+    "InstanceType" : {
+      "Description" : "Instance type",
+      "Type" : "String",
+      "AllowedValues" : [ "m1.tiny", "m1.small", "m1.medium", "m1.large", "m1.xlarge" ],
+      "ConstraintDescription" : "must be a valid instance type.",
+      "Default" : "m1.small"
+    },
+    "ImageName" : {
+      "Description" : "Image name of instance",
+      "Type" : "String",
+      "Default" : "test_centos"
+    }
+  },
+  
+  "Resources" : {
+    "SSHSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable SSH access via port 22",
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "22",  "ToPort" : "22",  "CidrIp" : { "Ref" : "CidrIp" } }
+        ]
+      }
+    },
+    
+    "WebSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable Web Server access via port 80",
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "80",  "ToPort" : "80",  "CidrIp" : { "Ref" : "CidrIp" } }
+        ]
+      }
+    },
+    
+    "DBSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable DB Server access tcp 5432",
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "5432",  "ToPort" : "5432",  "CidrIp" : "0.0.0.0/0" }
+        ]
+      }
+    },
+
+    "TestInstance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "SubnetId"       : "da364729-efa1-4bcc-a35f-a82da5e9209e",
+        "ImageId"        : { "Ref" : "ImageName" },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "SecurityGroupIds" : [
+          {"Ref" : "SSHSecurityGroup"},
+          {"Ref" : "WebSecurityGroup"},
+          {"Ref" : "DBSecurityGroup"}
+        ],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -x\n",
+          "echo hogehoge\n"
+        ]]}}
+      }
+    }
+  },
+
+  "Outputs": {
+    "TestIP" : {
+      "Description": "Test server IP Address",
+      "Value" : "aaa"
+    }
+  }
+}
